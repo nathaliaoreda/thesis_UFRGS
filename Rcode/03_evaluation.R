@@ -315,7 +315,7 @@ SPREAD_9_plot <- ggplot(SPREAD_9_CSFE_df, aes(x=dates,y= value)) +
         legend.title = element_text(size = 10),
         legend.text = element_text(size = 10),
         plot.title = element_text(size = 15))
-SPREAD_12_plot <- ggplot(SPREAD_9_CSFE_df, aes(x=dates,y= value)) +
+SPREAD_12_plot <- ggplot(SPREAD_12_CSFE_df, aes(x=dates,y= value)) +
   geom_line(aes(color = Model),linetype = "solid",size=0.8) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
   scale_color_npg()+
@@ -419,7 +419,7 @@ IPCA_9_plot <- ggplot(IPCA_9_CSFE_df, aes(x=dates,y= value)) +
         legend.title = element_text(size = 10),
         legend.text = element_text(size = 10),
         plot.title = element_text(size = 15))
-IPCA_12_plot <- ggplot(IPCA_9_CSFE_df, aes(x=dates,y= value)) +
+IPCA_12_plot <- ggplot(IPCA_12_CSFE_df, aes(x=dates,y= value)) +
   geom_line(aes(color = Model),linetype = "solid",size=0.8) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
   scale_color_npg()+
