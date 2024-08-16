@@ -27,7 +27,6 @@ rmspe_data <- data.frame(variable = character(),
                          Diebold_Mariano_Test = numeric(),
                          stringsAsFactors = FALSE)
 
-
 # ###########################
 # # Run this code to save AR-BIC results###
 # # This is the benchmark used for comparison
@@ -45,9 +44,8 @@ rmspe_data <- data.frame(variable = character(),
 # 
 # # Print the resulting data frame
 # print(rmspe_data)
-# print(pred_error_bic)
 # saveRDS(rmspe_data,file = paste("forecasts/","ar_bic_results_rw",".rda",sep = ""))
-# saveRDS(pred_error_bic,file = paste("forecasts/","pred_error_bic_rw",".rda",sep = ""))
+
 
 
 ############################
@@ -90,7 +88,7 @@ models_list <- c("ar_rw_aic","ar_rw_cv","shrink_poor_rw_cv_ridge","shrink_poor_r
                  "b1_rw_cv_boost","b1_rw_cv_ridge","b1_en_rw_cv_en","b1_rw_cv_lasso","b2_rw_cv_boost","b2_rw_cv_ridge","b2_en_rw_cv_en","b2_rw_cv_lasso","b3_rw_cv_boost","b3_rw_cv_ridge","b3_en_rw_cv_en","b3_rw_cv_lasso")
 
 ar_bic_rmspe <- readRDS("forecasts/ar_bic_results_rw.rda")
-pred_error_bic_rw <- readRDS("forecasts/pred_error_bic_rw.rda")
+model_ar_bic <- readRDS("forecasts/ar_bic_rw.rda")
 matrix_list <- list()
 CSFE <- list()
 CSFE_list <- list()
@@ -103,11 +101,20 @@ for (v in variable) {
       model_matrix <- sapply(model_list_filtered, function(x) x$pred)
       pred_error <- (test_matrix - model_matrix)
       matrix_list[[model]] <- pred_error[is.finite(pred_error)]^2
-      CSFE[[model]] <- cumsum((pred_error_bic_rw[is.finite(pred_error_bic_rw)]^2) - (pred_error[is.finite(pred_error)]^2))
-      rmspe <- (sqrt(mean(pred_error[is.finite(pred_error)]^2, na.rm = TRUE)) 
+      model_list_filtered_bic <- model_ar_bic[sapply(model_ar_bic, function(x) x$horizon == h & x$variable == v & x$model == "ar_bic_rw_bic")]
+      model_matrix_bic <- sapply(model_list_filtered_bic, function(x) x$pred)
+      pred_error_bic <- (test_matrix - model_matrix_bic)
+      CSFE[[model]] <- cumsum((pred_error_bic[is.finite(pred_error_bic)]^2) - (pred_error[is.finite(pred_error)]^2))
+      rmspe <- (sqrt(mean(pred_error[is.finite(pred_error)]^2, na.rm = TRUE))
                 / ar_bic_rmspe$RMSPE[ar_bic_rmspe$variable == v & ar_bic_rmspe$horizon == h])
       # Diebold-Mariano test
-      dm_test <- forecast::dm.test(pred_error, pred_error_bic_rw,h=h,varestimator = "bartlett")
+      if (all(pred_error==pred_error_bic)){
+        dm_test <- list()
+        dm_test$p.value = 1}
+      else{
+        dm_test <- forecast::dm.test(pred_error, pred_error_bic,h=h,varestimator = "bartlett")
+      }
+      
       rmspe_data <- rbind(rmspe_data, data.frame(variable = v, horizon = h,model=model,RMSPE = rmspe,Diebold_Mariano_Test = format(dm_test$p.value, scientific = FALSE)))
     }
     # Store the squared error values in results_list
@@ -306,7 +313,7 @@ SPREAD_9_plot <- ggplot(SPREAD_9_CSFE_df, aes(x=dates,y= value)) +
         legend.title = element_text(size = 10),
         legend.text = element_text(size = 10),
         plot.title = element_text(size = 15))
-SPREAD_12_plot <- ggplot(SPREAD_9_CSFE_df, aes(x=dates,y= value)) + 
+SPREAD_12_plot <- ggplot(SPREAD_12_CSFE_df, aes(x=dates,y= value)) + 
   geom_line(aes(color = Model),linetype = "solid",size=0.8) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
   scale_color_npg()+
@@ -412,7 +419,7 @@ IPCA_9_plot <- ggplot(IPCA_9_CSFE_df, aes(x=dates,y= value)) +
         legend.title = element_text(size = 10),
         legend.text = element_text(size = 10),
         plot.title = element_text(size = 15))
-IPCA_12_plot <- ggplot(IPCA_9_CSFE_df, aes(x=dates,y= value)) + 
+IPCA_12_plot <- ggplot(IPCA_12_CSFE_df, aes(x=dates,y= value)) + 
   geom_line(aes(color = Model),linetype = "solid",size=0.8) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
   scale_color_npg()+
